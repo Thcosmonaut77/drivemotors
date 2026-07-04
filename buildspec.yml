@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - npm ci
+  pre_build:
+    commands:
+      - echo "Seeding database..."
+      - node seed.js
+  build:
+    commands:
+      - echo "Build completed."
+  post_build:
+    commands:
+      - echo "Deploying to Elastic Beanstalk..."
+artifacts:
+  files:
+    - "**/*"
+  discard-paths: no
