@@ -324,7 +324,7 @@ nav ul{
 <section id="cars">
 
 <div class="title">
-<h2>Featured Vehicles</h2>
+<h2>Our Vehicles</h2>
 </div>
 
 <div class="cars" id="vehiclesGrid">
@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const grid = document.getElementById('vehiclesGrid');
 
   try {
-    const res = await fetch('/api/vehicles?featured=true');
+    const res = await fetch('/api/vehicles');
     const json = await res.json();
 
     if (!json.success || !json.data.length) {
