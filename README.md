@@ -65,8 +65,7 @@ Create an ECS Fargate task using that image. Mount an EFS volume at `/app/data` 
 # On a fresh Amazon Linux 2023 instance
 curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
 dnf install -y nodejs git
-git clone <repo> drivemotors-tmp
-mv drivemotors-tmp/* drivemotors/ && rm -rf drivemotors-tmp
+git clone <repo> drivemotors/
 cd drivemotors
 cp .env.example .env
 npm install
