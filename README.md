@@ -1,84 +1,142 @@
-# DriveX Motors - Full-Stack Application
+# DriveX Motors - Full-Stack Vehicle Marketplace
 
-## Overview
+A complete vehicle marketplace platform where customers browse, buy, sell, and negotiate car purchases.
 
-A premium automobile dealership website with a Node.js/Express backend and dynamic frontend.
-
-## Project Structure
+## Architecture
 
 ```
-drivemotors/
-├── server.js          # Express API + static file server
-├── db.js              # SQLite database setup
-├── seed.js            # Database seeder (6 vehicles)
-├── package.json
-├── Dockerfile
-├── docker-compose.yml
-├── buildspec.yml      # AWS CodeBuild spec
-├── public/
-│   └── index.html     # Frontend (fetches from API)
-└── .env.example
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│    Frontend      │────▶│    Backend       │────▶│    Database      │
+│  React + Nginx   │     │  Node.js/Express │     │  PostgreSQL 16   │
+│  Port 3000       │     │  Port 5000       │     │  Port 5432       │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
+
+Each service has its own `Dockerfile` and can be deployed independently.
+
+## Quick Start
+
+```bash
+# Clone and start everything
+docker-compose up --build
+
+# Access the app
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:5000/api
+# Database: localhost:5432
+```
+
+## Demo Accounts
+
+| Role     | Email                 | Password     |
+|----------|-----------------------|--------------|
+| Admin    | admin@drivex.com      | admin123     |
+| Customer | customer@example.com  | customer123  |
+
+## Features
+
+### Customer
+- Browse vehicle catalog with advanced filtering (make, price, year, condition, fuel, transmission)
+- View detailed vehicle specs, gallery, and reviews
+- Purchase vehicles (cash, financing, trade-in)
+- Make offers / negotiate prices on any vehicle
+- Submit cars for sale
+- Save/favorite vehicles
+- Manage profile and password
+- View purchase history and offer status
+
+### Admin
+- Dashboard with revenue, sales, and inventory stats
+- Full CRUD on vehicle inventory
+- Manage purchases and update statuses
+- Review sell submissions and make offers
+- View all customer offers
+- View all users
 
 ## API Endpoints
 
-| Method | Path              | Description              |
-|--------|-------------------|--------------------------|
-| GET    | /api/vehicles     | List vehicles (query: ?featured=true, ?category=sedan) |
-| GET    | /api/vehicles/:id | Single vehicle           |
-| POST   | /api/contact      | Submit contact form      |
-| GET    | /api/health       | Health check             |
+### Auth
+- `POST /api/auth/register` - Create account
+- `POST /api/auth/login` - Sign in
+- `GET /api/auth/profile` - Get profile (auth required)
+- `PUT /api/auth/profile` - Update profile (auth required)
+- `PUT /api/auth/password` - Change password (auth required)
 
-## Local Development
+### Vehicles
+- `GET /api/vehicles` - List (with filters: category, make, minPrice, maxPrice, year, condition, fuel, transmission, search, sort, page, limit)
+- `GET /api/vehicles/makes` - List unique makes
+- `GET /api/vehicles/categories` - List categories
+- `GET /api/vehicles/:id` - Vehicle detail + reviews
+- `POST /api/vehicles/:id/save` - Toggle save (auth required)
+- `GET /api/vehicles/user/saved` - Saved vehicles (auth required)
+- `POST /api/vehicles/:id/reviews` - Add review (auth required)
+
+### Purchases
+- `POST /api/purchases` - Buy a vehicle (auth required)
+- `GET /api/purchases/my` - My purchases (auth required)
+- `PUT /api/purchases/:id/cancel` - Cancel (auth required)
+
+### Sell
+- `POST /api/sell` - Submit car for sale
+- `GET /api/sell/my` - My submissions (auth required)
+
+### Offers
+- `POST /api/offers` - Make an offer (auth required)
+- `GET /api/offers/my` - My offers (auth required)
+- `PUT /api/offers/:id/respond` - Counter/accept/reject (auth required)
+
+### Admin
+- `GET /api/admin/stats` - Dashboard stats
+- `GET|POST /api/admin/vehicles` - List/create vehicles
+- `PUT|DELETE /api/admin/vehicles/:id` - Update/delete vehicle
+- `GET /api/admin/purchases` - All purchases
+- `PUT /api/admin/purchases/:id` - Update purchase status
+- `GET /api/admin/sell-submissions` - All sell submissions
+- `PUT /api/admin/sell-submissions/:id` - Update submission
+- `GET /api/admin/offers` - All offers
+- `GET /api/admin/users` - All users
+- `GET /api/admin/inquiries` - All inquiries
+
+### Inquiries
+- `POST /api/inquiries` - Submit inquiry
+
+## Tech Stack
+
+| Layer     | Technology |
+|-----------|------------|
+| Frontend  | React 18, Vite, Tailwind CSS, React Router, Lucide Icons |
+| Backend   | Node.js 20, Express 4, PostgreSQL (pg), JWT Auth, bcryptjs |
+| Database  | PostgreSQL 16 |
+| DevOps    | Docker, Docker Compose, Nginx |
+
+## Local Development (without Docker)
 
 ```bash
-cp .env.example .env
+# Database - run PostgreSQL locally or via Docker
+docker run -d --name drivex-db -p 5432:5432 -e POSTGRES_DB=drivemotors -e POSTGRES_USER=drivex -e POSTGRES_PASSWORD=drivex_secret_2024 postgres:16-alpine
+
+# Backend
+cd backend
+cp .env.example .env  # Edit DB_HOST to localhost
 npm install
 npm run seed
-npm start
-```
+npm run dev
 
-Open http://localhost:4000
-
-## AWS Deployment
-
-### Option 1: Elastic Beanstalk (recommended)
-
-1. Zip the project (excluding node_modules/ and data/)
-2. Upload to Elastic Beanstalk (Node.js 20 platform)
-3. Set environment variable: `NODE_ENV=production`
-4. Add `npm run seed` to the post-deploy hook or run once manually
-
-### Option 2: ECS / Fargate
-
-```bash
-docker build -t drivemotors .
-docker tag drivemotors <account>.dkr.ecr.<region>.amazonaws.com/drivemotors
-docker push <account>.dkr.ecr.<region>.amazonaws.com/drivemotors
-```
-
-Create an ECS Fargate task using that image. Mount an EFS volume at `/app/data` for persistent SQLite storage, or migrate to RDS (PostgreSQL) for production.
-
-### Option 3: EC2
-
-```bash
-# On a fresh Amazon Linux 2023 instance
-curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
-dnf install -y nodejs git
-git clone <repo> drivemotors/
-cd drivemotors
-cp .env.example .env
+# Frontend
+cd frontend
 npm install
-npm run seed
-npm start
+npm run dev
 ```
 
-Use systemd or PM2 for process management.
+## Deployment
 
-### Production Database
+Each service has its own `Dockerfile` and can be deployed to:
+- **AWS ECS/Fargate** - Deploy each container separately
+- **Kubernetes** - Use the Dockerfiles to build images
+- **DigitalOcean App Platform** - Point each service to its Dockerfile
+- **Any container orchestration platform**
 
-SQLite works well for low-traffic. For higher scale, swap to PostgreSQL:
-
-1. Create an RDS PostgreSQL instance
-2. Replace `better-sqlite3` with `pg` and update `db.js`
-3. Add RDS environment variables to Elastic Beanstalk / ECS
+For production, update:
+- `JWT_SECRET` in backend environment
+- `POSTGRES_PASSWORD` in database environment
+- `FRONTEND_URL` for CORS configuration
